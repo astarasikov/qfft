@@ -28,6 +28,7 @@ public:
 
     ~AudioBuffer() {
         delete[] _buffer;
+        close();
     }
 
     qint64 readData(char *data, qint64 maxlen);

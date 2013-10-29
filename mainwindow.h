@@ -19,6 +19,8 @@ protected:
     QMutex* _mutex;
     FFTThread *_thread;
 
+    void toggleProcessing();
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

@@ -1,6 +1,25 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+void MainWindow::toggleProcessing()
+{
+    QMutexLocker lock(_mutex);
+    if (_thread) {
+        _thread->terminate();
+        _thread->wait();
+        delete _thread;
+        _thread = 0;
+    }
+    else {
+        unsigned sampleRate = ui->sampleRateComboBox->currentText().toInt(0);
+        unsigned interval = ui->intervalSpinBox->value();
+        unsigned bufferSize = ui->bufferSizeSpinBox->value();
+
+        _thread = new FFTThread(this, sampleRate, interval, bufferSize);
+        _thread->start();
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -17,15 +36,5 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_startStopButton_clicked()
 {
-    QMutexLocker lock(_mutex);
-    if (_thread) {
-        _thread->terminate();
-        _thread->wait();
-        delete _thread;
-        _thread = 0;
-    }
-    else {
-        _thread = new FFTThread(this);
-        _thread->start();
-    }
+    toggleProcessing();
 }

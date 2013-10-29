@@ -2,9 +2,10 @@
 #include <QDebug>
 
 FFTThread::FFTThread(QObject *parent, unsigned sampleRate,
-                     unsigned period) :
+                     unsigned period, unsigned bufferSize) :
     QThread(parent),
     _sample_rate(sampleRate),
+    _buffer_size(bufferSize),
     _timer(new QTimer(0)),
     _audio_buffer(0),
     _audio_input(0)
@@ -35,16 +36,19 @@ void FFTThread::initAudio() {
 
     _audio_buffer = new AudioBuffer(sizeof(float) * _sample_rate);
     _audio_input = new QAudioInput(format);
-
-    unsigned bufsize = _sample_rate / 20;
-    _audio_input->setBufferSize(bufsize ? bufsize : 100);
+    _audio_input->setBufferSize(_buffer_size);
     _audio_input->start(_audio_buffer);
 }
 
 FFTThread::~FFTThread()
 {
+    if (_audio_input) {
+        _audio_input->stop();
+    }
     _timer->stop();
     delete _timer;
+    delete _audio_input;
+    delete _audio_buffer;
 }
 
 void FFTThread::processAudio()
