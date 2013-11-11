@@ -3,35 +3,43 @@
 
 qint64 AudioBuffer::readData(char *data, qint64 maxlen)
 {
-    qDebug() << __func__ << " " << maxlen;
     QMutexLocker lock(_mutex);
-    qint64 used_length = maxlen % _bufferSize;
-
+    Q_ASSERT(_head < _buffer_size);
+    qint64 len = maxlen < _buffer_size ? maxlen : _buffer_size;
+    qint64 space_in_buffer = _buffer_size - _head;
+    qint64 chunk_size_end = qMin(len, space_in_buffer);
+    std::copy(_buffer + _head, _buffer + _head + chunk_size_end, data);
+    _head += chunk_size_end;
+    _head %= _buffer_size;
+    if (len > space_in_buffer) {
+        qint64 rem = len - space_in_buffer;
+        std::copy(_buffer, _buffer + rem, data + space_in_buffer);
+        _head = rem;
+    }
+    return len;
 }
 
 qint64 AudioBuffer::writeData(const char *data, qint64 len)
 {
-    qDebug() << __func__ << " " << len;
-
     QMutexLocker lock(_mutex);
-    qint64 used_length = (len % _bufferSize);
-    qint64 space_in_buf = (_bufferSize - _head);
-
-    const char *data_start = data + (len - used_length);
-    const char *data_end = data_start + len;
-
-    if (used_length <= space_in_buf) {
-        std::copy(data_start, data_end, _buffer + _head);
-        _head += used_length;
+    Q_ASSERT(_head < _buffer_size);
+    qint64 space_in_buffer = _buffer_size - _head;
+    if (len >= _buffer_size) {
+        _head = 0;
+        std::copy(data, data + _buffer_size, _buffer);
+    }
+    else if (len > space_in_buffer) {
+        qint64 remaining_data = len - space_in_buffer;
+        const char *space_end = data + space_in_buffer;
+        std::copy(data, space_end, _buffer + _head);
+        std::copy(space_end, space_end + remaining_data, _buffer);
+        _head = remaining_data;
     }
     else {
-        const char *first_chunk_end = data_start + space_in_buf;
-        qint64 second_chunk_size = used_length - space_in_buf;
-        std::copy(data_start, first_chunk_end, _buffer + _head);
-        std::copy(first_chunk_end,
-                  first_chunk_end + second_chunk_size,
-                  _buffer);
-        _head = second_chunk_size;
+        std::copy(data, data + len, _buffer + _head);
+        _head += len;
+        _head %= _buffer_size;
     }
+
     return len;
 }

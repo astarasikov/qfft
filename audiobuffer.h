@@ -12,17 +12,18 @@ class AudioBuffer : public QIODevice
 {
     Q_OBJECT
 protected:
-    qint64 _bufferSize;
+    qint64 _buffer_size;
     qint64 _head;
     char *_buffer;
 
     QMutex *_mutex;
 public:
-    AudioBuffer(qint64 bufferSize) : _bufferSize(bufferSize),
+    AudioBuffer(qint64 bufferSize) : _buffer_size(bufferSize),
         _head(0),
         _buffer(new char[bufferSize]),
         _mutex(new QMutex())
     {
+        std::fill(_buffer, _buffer + _buffer_size, 0);
         open(QIODevice::ReadWrite);
     }
 

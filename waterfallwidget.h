@@ -8,11 +8,13 @@
 #include <QMutex>
 #include <QMutexLocker>
 
+#include "fft_buffer.h"
+
 class WaterfallWidget : public QWidget
 {
     Q_OBJECT
 protected:
-    QMutex* _imageMutex;
+    QMutex* _image_mutex;
     QImage* _image;
 
 public:
@@ -20,12 +22,11 @@ public:
     ~WaterfallWidget();
     void paintEvent(QPaintEvent *);
     void resizeEvent(QResizeEvent *);
-    void updateWithData(float *data, qint64 count, qint64 sampleRate);
 
 signals:
 
 public slots:
-
+    void updateWithData(FFTBuffer *fft_buffer);
 };
 
 #endif // WATERFALLWIDGET_H

@@ -15,7 +15,9 @@ void MainWindow::toggleProcessing()
         unsigned interval = ui->intervalSpinBox->value();
         unsigned bufferSize = ui->bufferSizeSpinBox->value();
 
-        _thread = new FFTThread(this, sampleRate, interval, bufferSize);
+        _thread = new FFTThread(this, interval, sampleRate, bufferSize);
+        connect(_thread, SIGNAL(fftReady(FFTBuffer*)),
+                ui->waterfallWidget, SLOT(updateWithData(FFTBuffer*)));
         _thread->start();
     }
 }

@@ -1,14 +1,18 @@
 #include "fftthread.h"
 #include <QDebug>
 
-FFTThread::FFTThread(QObject *parent, unsigned sampleRate,
-                     unsigned period, unsigned bufferSize) :
+#include <QElapsedTimer>
+
+FFTThread::FFTThread(QObject *parent, unsigned period,
+                     unsigned sampleRate, unsigned bufferSize,
+                     unsigned fftSize) :
     QThread(parent),
     _sample_rate(sampleRate),
     _buffer_size(bufferSize),
     _timer(new QTimer(0)),
     _audio_buffer(0),
-    _audio_input(0)
+    _audio_input(0),
+    _fft_buffer(new FFTBuffer(fftSize))
 {
     _timer->setInterval(period);
     _timer->moveToThread(this);
@@ -49,9 +53,22 @@ FFTThread::~FFTThread()
     delete _timer;
     delete _audio_input;
     delete _audio_buffer;
+    delete _fft_buffer;
 }
 
 void FFTThread::processAudio()
 {
-    qDebug() << __func__;
+    QElapsedTimer timer;
+    timer.start();
+
+    {
+        QMutexLocker(_fft_buffer->_mutex);
+        qint64 len = _audio_buffer->readData((char*)_fft_buffer->_data,
+               _fft_buffer->_size * sizeof(float));
+        _fft_buffer->process(len / sizeof(float));
+    }
+    qint64 dt = timer.elapsed();
+    qDebug() << "processed in " << dt;
+
+    emit fftReady(_fft_buffer);
 }

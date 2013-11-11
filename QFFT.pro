@@ -6,7 +6,9 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets multimedia
+greaterThan(QT_MAJOR_VERSION, 4): {
+    QT += widgets multimedia
+}
 lessThan(QT_MAJOR_VERSION, 5): {
     CONFIG += mobility
     MOBILITY += multimedia
@@ -25,6 +27,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     audiobuffer.h \
     waterfallwidget.h \
-    fftthread.h
+    fftthread.h \
+    fft_buffer.h \
+    dsp.h
 
 FORMS    += mainwindow.ui
